@@ -1,0 +1,35 @@
+<%= form_with model: [ :admin, book ], class: "space-y-4" do |form| %>
+  <% if book.errors.any? %>
+    <div class="px-3 py-2 border border-red-200 bg-red-50 text-red-700 rounded">
+      <% book.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :title, class: "block mb-1" %>
+    <%= form.text_field :title, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :author, class: "block mb-1" %>
+    <%= form.text_field :author, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :category_id, "Category", class: "block mb-1" %>
+    <%= form.collection_select :category_id, Category.order(:name), :id, :name,
+          { prompt: "Select a category" }, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :description, class: "block mb-1" %>
+    <%= form.text_area :description, rows: 5, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <%= form.submit class: "px-4 py-2 bg-gray-800 text-white rounded cursor-pointer" %>
+    <%= link_to "Cancel", admin_books_path, class: "hover:underline" %>
+  </div>
+<% end %>
