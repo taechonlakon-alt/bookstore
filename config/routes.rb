@@ -13,4 +13,9 @@ Rails.application.routes.draw do
 
   resources :books, only: %i[index show]
   root "books#index"
+
+  namespace :admin do
+    root "dashboard#index"
+    resources :books, except: :show
+  end
 end
