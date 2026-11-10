@@ -20,7 +20,7 @@
 - Delete button: `button_to "Delete", ..., method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }`.
 - Non-admin redirect: `redirect_to root_path, alert: "Admins only."`.
 - UI: simple and easy to use, not fancy. Plain Tailwind — white/gray background, gray text, one muted accent (`gray-800` buttons, `gray-100` for the active category). No gradients, shadows, bright colors or animations. One centered column (`max-w-4xl mx-auto p-4`), plain lists/tables, standard form fields with labels.
-- Commit after each task.
+- Commits: one commit per logical piece of work (e.g. migration+model, controller+views), not one big commit per task. Never commit anything under `test/` — tests are written and run locally only. Stage explicit paths (`git add app db config`), never `git add .`.
 
 ## Review Focus
 
@@ -82,7 +82,7 @@ Run: `bin/rails test` — Expected: PASS. Run: `grep database: config/database.y
 - [ ] **Step 5: Commit**
 
 ```bash
-git add . && git commit -m "New app with authentication and admin role"
+git add app config db && git commit -m "New app with authentication and admin role"
 ```
 
 ---
@@ -138,7 +138,7 @@ Run: `bin/rails test` — Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add . && git commit -m "Add Category and Book models"
+git add app config db && git commit -m "Add Category and Book models"
 ```
 
 ---
@@ -213,7 +213,7 @@ Run: `bin/rails test` — Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add . && git commit -m "Add book list, filter, search and details"
+git add app config db && git commit -m "Add book list, filter, search and details"
 ```
 
 ---
@@ -297,7 +297,7 @@ Run: `bin/rails test` — Expected: PASS.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add . && git commit -m "Add admin page and book CRUD"
+git add app config db && git commit -m "Add admin page and book CRUD"
 ```
 
 ---
@@ -322,5 +322,5 @@ Expected: `[2, 3, 6]`.
 
 Run: `bin/rails test` — Expected: PASS.
 ```bash
-git add . && git commit -m "Add seed data"
+git add app config db && git commit -m "Add seed data"
 ```
