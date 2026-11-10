@@ -1,0 +1,30 @@
+<h1 class="text-2xl font-bold mb-4">Books</h1>
+
+<div class="flex flex-wrap gap-2 mb-4">
+  <%= link_to "All", books_path(q: params[:q].presence),
+        class: "px-3 py-1 border border-gray-300 rounded #{'bg-gray-100' if params[:category_id].blank?}" %>
+  <% @categories.each do |category| %>
+    <%= link_to category.name, books_path(category_id: category.id, q: params[:q].presence),
+          class: "px-3 py-1 border border-gray-300 rounded #{'bg-gray-100' if params[:category_id].to_s == category.id.to_s}" %>
+  <% end %>
+</div>
+
+<%= form_with url: books_path, method: :get, class: "flex gap-2 mb-6" do |form| %>
+  <%= form.hidden_field :category_id, value: params[:category_id] if params[:category_id].present? %>
+  <%= form.search_field :q, value: params[:q], placeholder: "Search by title",
+        class: "flex-1 border border-gray-300 rounded px-3 py-2" %>
+  <%= form.submit "Search", name: nil, class: "px-4 py-2 bg-gray-800 text-white rounded cursor-pointer" %>
+<% end %>
+
+<% if @books.any? %>
+  <ul class="divide-y divide-gray-200 border-y border-gray-200">
+    <% @books.each do |book| %>
+      <li class="py-3">
+        <%= link_to book.title, book_path(book), class: "font-medium hover:underline" %>
+        <p class="text-sm text-gray-600"><%= book.author %></p>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="text-gray-600">No books found.</p>
+<% end %>

@@ -1,0 +1,7 @@
+<h1 class="text-2xl font-bold mb-2"><%= @book.title %></h1>
+
+<p class="text-gray-600 mb-1">Author: <%= @book.author %></p>
+<p class="text-gray-600 mb-4">Category: <%= @book.category.name %></p>
+<p class="mb-6 whitespace-pre-line"><%= @book.description %></p>
+
+<%= link_to "← Back to books", books_path, class: "hover:underline" %>
