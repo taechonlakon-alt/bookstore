@@ -29,6 +29,9 @@
         <%= link_to "Bookstore", root_path, class: "font-bold" %>
         <% if authenticated? %>
           <div class="flex items-center gap-4 text-sm">
+            <% if Current.user.admin? %>
+              <%= link_to "Admin", admin_root_path, class: "hover:underline" %>
+            <% end %>
             <span class="text-gray-600"><%= Current.user.email_address %></span>
             <%= button_to "Log out", session_path, method: :delete, class: "hover:underline cursor-pointer" %>
           </div>
