@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     root "dashboard#index"
     resources :books, except: :show
     resources :categories, except: :show
+    resources :markets, except: :show
     resources :users, only: %i[index new create]
   end
 end

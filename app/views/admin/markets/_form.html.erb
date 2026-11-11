@@ -1,0 +1,28 @@
+<%= form_with model: [ :admin, market ], class: "space-y-4" do |form| %>
+  <% if market.errors.any? %>
+    <div class="px-3 py-2 border border-red-200 bg-red-50 text-red-700 rounded">
+      <% market.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, class: "block mb-1" %>
+    <%= form.text_field :name, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <fieldset>
+    <legend class="mb-1">Books</legend>
+    <div class="space-y-1">
+      <%= form.collection_check_boxes :book_ids, Book.order(:title), :id, :title do |b| %>
+        <%= b.label(class: "flex items-center gap-2") { b.check_box + b.text } %>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <div class="flex items-center gap-4">
+    <%= form.submit class: "px-4 py-2 bg-gray-800 text-white rounded cursor-pointer" %>
+    <%= link_to "Cancel", admin_markets_path, class: "hover:underline" %>
+  </div>
+<% end %>
