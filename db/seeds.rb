@@ -35,3 +35,14 @@ books.each do |category_name, category_books|
     end
   end
 end
+
+markets = {
+  "Central Market" => [ "Dune", "Cosmos", "Sapiens" ],
+  "Online Store" => Book.pluck(:title)
+}
+
+markets.each do |name, titles|
+  Market.find_or_create_by!(name: name) do |market|
+    market.books = Book.where(title: titles)
+  end
+end
