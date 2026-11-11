@@ -21,4 +21,10 @@ Rails.application.routes.draw do
     resources :markets, except: :show
     resources :users, only: %i[index new create]
   end
+
+  namespace :api do
+    namespace :v1 do
+      resources :books, :categories, :markets, :users
+    end
+  end
 end
