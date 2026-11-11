@@ -14,19 +14,33 @@
 | 4 | Seed for an admin user | Already done (`admin@example.com` / `password`). Seeds also get markets. |
 | 5 | Market many-to-many with product | `Market(name)` + join table `market_books(market_id, book_id)` with a unique pair index; `has_many :through` on both sides |
 | 6 | Create/edit/delete Market | `/admin/markets` CRUD, admin only (same as all other management pages); books chosen with checkboxes |
-| 7 | API for Book, Category, Market, User | Read-only JSON: `GET /api/<model>` and `GET /api/<model>/:id`. Auth = the same login cookie. Not logged in → `401` JSON. Users API admin-only (non-admin → `403`). Never output `password_digest`. |
+| 7 | API for Book, Category, Market, User | Same structure as `store`'s `Api::V1::ProductsController`: `/api/v1/<model>`, full CRUD (index/show/create/update/destroy), `skip_forgery_protection`, `render json:` with `only:`/`include:`, `find_by` + `{ error: "... not found" }` 404, `{ errors: [...] }` 422, `{ message: "... deleted" }` on destroy. |
+
+## Following `store`
+
+User asked to follow the structure of `../store` (commit `58e8f51 api`). Copied from it:
+- `namespace :api do namespace :v1 do resources ... end end`
+- One controller per model, five actions, same response shapes and status codes.
+- `render json: record, only: [...], include: { assoc: { only: [...] } }`.
+- Join model pattern `MarketProduct` → `MarketBook` with `validates :book_id, uniqueness: { scope: :market_id }`.
+
+Deliberate differences from `store` (and why):
+- **Auth on the API.** `store`'s API uses `allow_unauthenticated_access`, so anyone can create/delete products. Copying that would break this app's rule that only admins create/edit/delete. Here: reading needs login (same as the web pages), writing needs admin, the users API is admin-only. Auth is the existing login cookie. Guest → `401 {"error":"Unauthorized"}`, non-admin write → `403 {"error":"Forbidden"}`.
+- **Empty list returns `200 []`,** not `store`'s `404 "No products found"` — an empty list isn't an error.
+- **Deleting a market removes its book links** (`dependent: :destroy`), unlike `store`'s `restrict_with_error`, which would block deleting any market that has books, against requirement 6.
+- **Strong params use `params.expect`** (Rails 8 style, already used in this app) instead of `require/permit`.
+- User JSON is exactly `id, email_address, role, created_at`; `password_digest` never goes out.
 
 ## Planner's calls (simplest option, user can flip)
 
-- API is read-only (index/show). Write endpoints would need CSRF/token handling — not the simplest.
-- API uses the existing login session, not tokens.
+- API uses the existing login session, not tokens. The cookie is `same_site: :lax`, so other sites can't send it on POST/PATCH/DELETE, and `skip_forgery_protection` (as in `store`) stays safe enough here.
 - Market pages are admin-only, like Book and Category pages.
 - A category that still has books cannot be deleted; the admin sees "Cannot delete record because dependent books exist".
 - Admin user page has list + create only (no edit/delete — not requested).
 
 ## Non-goals
 
-API write endpoints, API tokens, pagination, showing markets on public book pages, user edit/delete.
+API tokens, API versions beyond v1, pagination, showing markets on public book pages, user edit/delete.
 
 ## UI
 

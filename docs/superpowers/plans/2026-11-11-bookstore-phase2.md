@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Admins manage categories, users and markets (markets many-to-many with books), and every model has a read-only JSON API.
+**Goal:** Admins manage categories, users and markets (markets many-to-many with books), and every model has a JSON CRUD API.
 
-**Architecture:** Same patterns as phase 1. New admin controllers inherit `Admin::BaseController`. New `Api::` namespace with `Api::BaseController` that reuses the login cookie but answers `401` JSON instead of redirecting. `Market`↔`Book` through a `MarketBook` join model.
+**Architecture:** Same patterns as phase 1. New admin controllers inherit `Admin::BaseController`. API copies the structure of `../store` (`Api::V1::ProductsController`, commit `58e8f51`): `/api/v1/<model>`, five actions, `render json:` with `only:`/`include:`. Unlike store, an `Api::V1::BaseController` adds auth (login to read, admin to write). `Market`↔`Book` through `MarketBook`, like store's `MarketProduct`.
 
 **Tech Stack:** Ruby 4.0.9, Rails 8.1.4.1, PostgreSQL, Tailwind, Minitest + fixtures.
 
@@ -15,7 +15,14 @@
 - App: `/home/chonlakon/internship/rails_project/bookstore`. Builds on phase 1 (`docs/superpowers/plans/2026-11-10-bookstore.md`).
 - "Product" = `Book`.
 - Every management page is under `/admin` and inherits `Admin::BaseController` (non-admin → `redirect_to root_path, alert: "Admins only."`).
-- API: read-only (`index`, `show`), JSON only, under `/api`. Guest → `401 {"error":"Unauthorized"}`. Non-admin on users API → `403 {"error":"Forbidden"}`. User JSON fields are exactly `id, email_address, role, created_at` — never `password_digest`.
+- API (structure from `../store/app/controllers/api/v1/products_controller.rb`): under `/api/v1`, actions `index, show, create, update, destroy`, `skip_forgery_protection`. Responses:
+  - index → `200` array (empty array if none; store's 404-on-empty is NOT copied)
+  - show/update → `200` object; create → `201` object
+  - missing id → `404 {"error":"<Model> not found"}` (via `find_by`, as in store)
+  - validation fail → `422 {"errors":[...full_messages]}`
+  - destroy → `200 {"message":"<Model> deleted"}`; destroy blocked (category with books) → `422 {"errors":[...]}`
+  - guest → `401 {"error":"Unauthorized"}`; logged-in non-admin on create/update/destroy, or on any users endpoint → `403 {"error":"Forbidden"}`
+  - User JSON is exactly `id, email_address, role, created_at` — never `password_digest`.
 - UI: simple, muted (white/gray, `gray-800` buttons, `border-gray-300` inputs, no bright colors/shadows), copy the look of `app/views/admin/books/*`.
 - Delete buttons: `button_to ..., method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }`.
 - Commits: one per logical piece. Never commit `test/` (git-ignored). Stage explicit paths, never `git add .`.
@@ -25,8 +32,8 @@
 1. Deleting a category that still has books → nothing deleted, redirect to `/admin/categories` with the error in `alert`. Test in Task 1.
 2. Admin creates a user with an email that already exists (any case, e.g. `ADMIN@example.com`) → form re-renders with 422 and "Email address has already been taken", not a 500. Test in Task 2.
 3. Editing a market and unticking every book → the market ends up with 0 books (hidden empty value from `collection_check_boxes`). Test in Task 4.
-4. A guest calling any `/api/...` URL gets `401` JSON, not an HTML redirect to the login page. Test in Task 5.
-5. `/api/users` JSON never contains `password_digest`, and a non-admin gets `403`. Test in Task 5.
+4. A logged-in non-admin sending `POST`/`PATCH`/`DELETE` to `/api/v1/...` changes nothing and gets `403` — the API must not be a back door around the admin-only pages (store's API has no auth at all). Guest gets `401` JSON, not an HTML redirect. Test in Task 5.
+5. `/api/v1/users` JSON (index, show, create response) never contains `password_digest`. Test in Task 5.
 
 ---
 
@@ -207,7 +214,7 @@ git add config/routes.rb app/controllers/admin/users_controller.rb app/views/adm
 - Test: `test/models/market_test.rb`
 
 **Interfaces:**
-- Produces: `Market` — `has_many :market_books, dependent: :destroy`; `has_many :books, through: :market_books`; `validates :name, presence: true, uniqueness: true`. `MarketBook` — `belongs_to :market`, `belongs_to :book`, `validates :book_id, uniqueness: { scope: :market_id }`. `Book` — `has_many :market_books, dependent: :destroy`; `has_many :markets, through: :market_books`. Fixtures `markets(:central)` (books: dune, cosmos), `markets(:online)` (books: dune).
+- Produces (shape copied from store's `Market`/`MarketProduct`, except `dependent: :destroy` on the market side so markets with books can still be deleted): `Market` — `has_many :market_books, dependent: :destroy`; `has_many :books, through: :market_books`; `validates :name, presence: true, uniqueness: true`. `MarketBook` — `belongs_to :market`, `belongs_to :book`, `validates :book_id, uniqueness: { scope: :market_id }`. `Book` — `has_many :market_books, dependent: :destroy`; `has_many :markets, through: :market_books`. Fixtures `markets(:central)` (books: dune, cosmos), `markets(:online)` (books: dune).
 
 - [ ] **Step 1: Generate**
 
@@ -326,89 +333,173 @@ git add config/routes.rb app/controllers/admin/markets_controller.rb app/views/a
 
 ---
 
-### Task 5: Read-only JSON API
+### Task 5: JSON CRUD API (structure from store)
 
 **Files:**
 - Modify: `config/routes.rb`
-- Create: `app/controllers/api/base_controller.rb`, `app/controllers/api/{books,categories,markets,users}_controller.rb`
-- Test: `test/controllers/api/api_test.rb`
+- Create: `app/controllers/api/v1/base_controller.rb`, `app/controllers/api/v1/{books,categories,markets,users}_controller.rb`
+- Test: `test/controllers/api/v1/books_controller_test.rb`, `test/controllers/api/v1/categories_controller_test.rb`, `test/controllers/api/v1/markets_controller_test.rb`, `test/controllers/api/v1/users_controller_test.rb`
+- Reference (read, don't copy blindly): `../store/app/controllers/api/v1/products_controller.rb`
 
 **Interfaces:**
-- Consumes: all models.
+- Consumes: all models; `Current.user`.
 - Produces:
   ```ruby
-  namespace :api, defaults: { format: :json } do
-    resources :books, :categories, :markets, :users, only: %i[index show]
+  namespace :api do
+    namespace :v1 do
+      resources :books, :categories, :markets, :users
+    end
   end
   ```
-  JSON shapes (arrays for index, object for show):
-  - book: `id, title, author, description, category_id, market_ids`
-  - category: `id, name, book_ids`
-  - market: `id, name, book_ids`
-  - user: `id, email_address, role, created_at`
+  `Api::V1::BaseController < ApplicationController`:
+  - `skip_forgery_protection`
+  - overrides private `request_authentication` → `render json: { error: "Unauthorized" }, status: :unauthorized`
+  - `require_admin` (private) → `render json: { error: "Forbidden" }, status: :forbidden unless Current.user.admin?`
+  - Book/Category/Market controllers: `before_action :require_admin, only: %i[create update destroy]`; Users controller: `before_action :require_admin` (all actions).
 
-- [ ] **Step 1: Failing tests**
+  JSON per model (store style: `render json: record, only: [...], include: {...}`):
+  | Model | `only:` | `include:` | params (`params.expect`) |
+  |---|---|---|---|
+  | Book | `id, title, author, description` | `category: { only: [:id, :name] }, markets: { only: [:id, :name] }` | `book: [:title, :author, :description, :category_id]` |
+  | Category | `id, name` | `books: { only: [:id, :title] }` | `category: [:name]` |
+  | Market | `id, name` | `books: { only: [:id, :title] }` | `market: [:name, book_ids: []]` |
+  | User | `id, email_address, role, created_at` | — | `user: [:email_address, :password, :password_confirmation, :role]` |
+
+  Put each controller's `only:`/`include:` options in one private method (e.g. `json_options`) so the five actions don't repeat them as store does.
+
+- [ ] **Step 1: Failing tests** (all use `as: :json`)
 
 ```ruby
-# test/controllers/api/api_test.rb
+# test/controllers/api/v1/books_controller_test.rb
 test "guest gets 401 json" do
-  get api_books_path
+  get api_v1_books_path, as: :json
   assert_response :unauthorized
   assert_equal "Unauthorized", response.parsed_body["error"]
 end
 
-test "books index and show" do
+test "logged-in user can read" do
   sign_in_as users(:regular)
-  get api_books_path
-  assert_response :success
+  get api_v1_books_path, as: :json
+  assert_response :ok
   assert_includes response.parsed_body.map { _1["title"] }, "Dune"
-  get api_book_path(books(:dune))
+
+  get api_v1_book_path(books(:dune)), as: :json
   body = response.parsed_body
-  assert_equal categories(:fiction).id, body["category_id"]
-  assert_equal books(:dune).market_ids.sort, body["market_ids"].sort
+  assert_equal "Fiction", body["category"]["name"]
+  assert_equal %w[Central Online], body["markets"].map { _1["name"] }.sort
 end
 
-test "categories and markets" do
+test "unknown id is 404 with message" do
   sign_in_as users(:regular)
-  get api_category_path(categories(:science))
-  assert_equal [books(:cosmos).id], response.parsed_body["book_ids"]
-  get api_markets_path
-  assert_includes response.parsed_body.map { _1["name"] }, "Central"
-end
-
-test "unknown id is 404" do
-  sign_in_as users(:regular)
-  get api_book_path(id: 999_999)
+  get api_v1_book_path(id: 999_999), as: :json
   assert_response :not_found
+  assert_equal "Book not found", response.parsed_body["error"]
 end
 
-test "users api is admin only and hides password digest" do
+test "non-admin cannot write" do
   sign_in_as users(:regular)
-  get api_users_path
+  assert_no_difference("Book.count") do
+    post api_v1_books_path, params: { book: { title: "X", category_id: categories(:fiction).id } }, as: :json
+    delete api_v1_book_path(books(:dune)), as: :json
+  end
   assert_response :forbidden
+  patch api_v1_book_path(books(:dune)), params: { book: { title: "Hacked" } }, as: :json
+  assert_response :forbidden
+  assert_equal "Dune", books(:dune).reload.title
+end
 
+test "admin creates, updates and deletes" do
   sign_in_as users(:admin)
-  get api_users_path
-  assert_response :success
+  post api_v1_books_path, params: { book: { title: "New", category_id: categories(:fiction).id } }, as: :json
+  assert_response :created
+  id = response.parsed_body["id"]
+
+  patch api_v1_book_path(id), params: { book: { title: "Newer" } }, as: :json
+  assert_response :ok
+  assert_equal "Newer", response.parsed_body["title"]
+
+  delete api_v1_book_path(id), as: :json
+  assert_response :ok
+  assert_equal "Book deleted", response.parsed_body["message"]
+end
+
+test "invalid book gives 422 with errors" do
+  sign_in_as users(:admin)
+  post api_v1_books_path, params: { book: { title: "" } }, as: :json
+  assert_response :unprocessable_entity
+  assert_includes response.parsed_body["errors"], "Title can't be blank"
+end
+
+# test/controllers/api/v1/categories_controller_test.rb
+test "show includes books" do
+  sign_in_as users(:regular)
+  get api_v1_category_path(categories(:science)), as: :json
+  assert_equal ["Cosmos"], response.parsed_body["books"].map { _1["title"] }
+end
+
+test "deleting a category with books gives 422" do
+  sign_in_as users(:admin)
+  assert_no_difference("Category.count") { delete api_v1_category_path(categories(:fiction)), as: :json }
+  assert_response :unprocessable_entity
+end
+
+test "empty list is 200 []" do
+  sign_in_as users(:admin)
+  MarketBook.delete_all
+  Book.delete_all
+  Category.delete_all
+  get api_v1_categories_path, as: :json
+  assert_response :ok
+  assert_equal [], response.parsed_body
+end
+
+# test/controllers/api/v1/markets_controller_test.rb
+test "admin creates a market with books" do
+  sign_in_as users(:admin)
+  post api_v1_markets_path, params: { market: { name: "Night", book_ids: [books(:cosmos).id] } }, as: :json
+  assert_response :created
+  assert_equal ["Cosmos"], response.parsed_body["books"].map { _1["title"] }
+end
+
+# test/controllers/api/v1/users_controller_test.rb
+test "non-admin cannot read users" do
+  sign_in_as users(:regular)
+  get api_v1_users_path, as: :json
+  assert_response :forbidden
+end
+
+test "admin lists and creates users without password digests" do
+  sign_in_as users(:admin)
+  get api_v1_users_path, as: :json
   assert_equal %w[created_at email_address id role], response.parsed_body.first.keys.sort
+
+  post api_v1_users_path, params: { user: { email_address: "api@example.com", password: "secret123", password_confirmation: "secret123", role: "user" } }, as: :json
+  assert_response :created
   assert_no_match "password", response.body
+  assert User.find_by(email_address: "api@example.com").authenticate("secret123")
 end
 ```
 Run: `bin/rails test test/controllers/api` — Expected: FAIL (no route).
 
 - [ ] **Step 2: Implement**
 
-- `Api::BaseController < ApplicationController`: override `request_authentication` (private) to `render json: { error: "Unauthorized" }, status: :unauthorized`; `rescue_from ActiveRecord::RecordNotFound` → `render json: { error: "Not found" }, status: :not_found`.
-- Each controller: `index` renders `Model.order(:id).as_json(...)`, `show` renders one record. Use `as_json(only: [...], methods: [:market_ids])` (or `:book_ids`) to produce the exact shapes above; preload with `includes` in `index`.
-- `Api::UsersController`: `before_action` → `render json: { error: "Forbidden" }, status: :forbidden unless Current.user.admin?`; `as_json(only: %i[id email_address role created_at])`.
+Routes and `Api::V1::BaseController` per Interfaces. Each model controller follows store's five actions:
+- `index`: `render json: Model.includes(...).order(:id), **json_options, status: :ok`
+- `show`/`update`/`destroy`: `record = Model.find_by(id: params[:id])`; if nil → `404 {"error":"<Model> not found"}`.
+- `create`: `201` on save, else `422 {"errors": record.errors.full_messages}`.
+- `destroy`: `if record.destroy` → `200 {"message":"<Model> deleted"}` else `422 {"errors": ...}`.
 
 - [ ] **Step 3: Run tests** — `bin/rails test` → PASS.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Commit (one per piece)**
 
 ```bash
-git add config/routes.rb app/controllers/api && git commit -m "Add read-only JSON API for books, categories, markets and users"
+git add config/routes.rb app/controllers/api/v1/base_controller.rb app/controllers/api/v1/books_controller.rb && git commit -m "Add books API"
+git add app/controllers/api/v1/categories_controller.rb && git commit -m "Add categories API"
+git add app/controllers/api/v1/markets_controller.rb && git commit -m "Add markets API"
+git add app/controllers/api/v1/users_controller.rb && git commit -m "Add users API (admin only)"
 ```
+(Routes for all four go in the first commit; later controllers make them work.)
 
 ---
 
@@ -424,7 +515,7 @@ git add config/routes.rb app/controllers/api && git commit -m "Add read-only JSO
 Run: `bin/rails db:seed && bin/rails db:seed && bin/rails runner 'p [Market.count, MarketBook.count]'`
 Expected: `[2, 9]`.
 
-- [ ] **Step 3: Manual walkthrough** (`bin/dev`, log in as `admin@example.com`): Admin → Manage categories (create, rename, delete empty one, try deleting Fiction → error), Manage users (create a user, log in as them), Manage markets (create with ticked books, edit, untick all, delete). Visit `/api/books`, `/api/markets/1`, `/api/users` as admin and as a normal user.
+- [ ] **Step 3: Manual walkthrough** (`bin/dev`, log in as `admin@example.com`): Admin → Manage categories (create, rename, delete empty one, try deleting Fiction → error), Manage users (create a user, log in as them), Manage markets (create with ticked books, edit, untick all, delete). With curl or the browser, logged in: `GET /api/v1/books`, `/api/v1/markets/1`, `/api/v1/users` as admin and as a normal user.
 
 - [ ] **Step 4: Commit**
 
