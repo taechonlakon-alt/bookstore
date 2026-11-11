@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_10_092801) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_11_071259) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -25,6 +25,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_092801) do
   end
 
   create_table "categories", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "market_books", force: :cascade do |t|
+    t.bigint "market_id", null: false
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_market_books_on_book_id"
+    t.index ["market_id", "book_id"], name: "index_market_books_on_market_id_and_book_id", unique: true
+    t.index ["market_id"], name: "index_market_books_on_market_id"
+  end
+
+  create_table "markets", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -49,5 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_10_092801) do
   end
 
   add_foreign_key "books", "categories"
+  add_foreign_key "market_books", "books"
+  add_foreign_key "market_books", "markets"
   add_foreign_key "sessions", "users"
 end
