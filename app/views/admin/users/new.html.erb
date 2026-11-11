@@ -1,0 +1,36 @@
+<h1 class="text-2xl font-bold mb-4">New user</h1>
+
+<%= form_with model: [ :admin, @user ], class: "space-y-4" do |form| %>
+  <% if @user.errors.any? %>
+    <div class="px-3 py-2 border border-red-200 bg-red-50 text-red-700 rounded">
+      <% @user.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :email_address, "Email", class: "block mb-1" %>
+    <%= form.email_field :email_address, required: true, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :password, class: "block mb-1" %>
+    <%= form.password_field :password, required: true, maxlength: 72, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :password_confirmation, class: "block mb-1" %>
+    <%= form.password_field :password_confirmation, required: true, maxlength: 72, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :role, class: "block mb-1" %>
+    <%= form.select :role, User.roles.keys, {}, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <%= form.submit "Create user", class: "px-4 py-2 bg-gray-800 text-white rounded cursor-pointer" %>
+    <%= link_to "Cancel", admin_users_path, class: "hover:underline" %>
+  </div>
+<% end %>
