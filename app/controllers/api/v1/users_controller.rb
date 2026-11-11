@@ -30,6 +30,10 @@ class Api::V1::UsersController < Api::V1::BaseController
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
 
+    if user == Current.user && user_params.key?(:role) && user_params[:role] != user.role
+      return render json: { errors: [ "You cannot change your own role" ] }, status: :unprocessable_entity
+    end
+
     if user.update(user_params)
       render json: user, **json_options, status: :ok
     else
@@ -40,6 +44,10 @@ class Api::V1::UsersController < Api::V1::BaseController
   def destroy
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
+
+    if user == Current.user
+      return render json: { errors: [ "You cannot delete your own account" ] }, status: :unprocessable_entity
+    end
 
     if user.destroy
       render json: { message: "User deleted" }, status: :ok
