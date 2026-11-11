@@ -6,5 +6,5 @@ class User < ApplicationRecord
 
   validates :email_address, presence: true, uniqueness: true
 
-  enum :role, { user: "user", admin: "admin" }, default: "user"
+  enum :role, { user: "user", admin: "admin" }, default: "user", validate: true
 end
