@@ -1,0 +1,40 @@
+info:
+  name: Create category - invalid
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/categories"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "category": {
+          "name": ""
+        }
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 422", function () {
+          expect(res.status).to.equal(422);
+        });
+
+        test("returns validation errors", function () {
+          expect(res.body.errors).to.be.an('array').that.is.not.empty;
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Failure: missing required fields gives 422 with an `errors` list."

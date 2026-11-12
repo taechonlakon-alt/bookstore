@@ -1,0 +1,37 @@
+info:
+  name: List users
+  type: http
+  seq: 25
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/users"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        // Remember the logged-in admin's id for the "delete yourself" case.
+        const admin = res.body.find((u) => u.email_address === bru.getEnvVar("adminEmail"));
+        bru.setVar("adminId", admin ? admin.id : "");
+    - type: tests
+      code: |-
+        test("returns 200", function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test("never exposes password hashes", function () {
+          res.body.forEach((u) => expect(u).to.not.have.property('password_digest'));
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin lists users. Password hashes must not appear in the response."

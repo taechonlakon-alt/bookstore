@@ -1,0 +1,41 @@
+info:
+  name: Non-admin create - forbidden
+  type: http
+  seq: 31
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/books"
+  headers:
+    - name: Cookie
+      value: "{{userCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "book": {
+          "title": "Should not be created",
+          "category_id": "{{existingCategoryId}}"
+        }
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 403", function () {
+          expect(res.status).to.equal(403);
+        });
+
+        test("returns Forbidden", function () {
+          expect(res.body.error).to.equal("Forbidden");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Failure: a normal user cannot create books (admin only), so 403."

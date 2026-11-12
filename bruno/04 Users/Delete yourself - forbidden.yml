@@ -1,0 +1,32 @@
+info:
+  name: Delete yourself - forbidden
+  type: http
+  seq: 28
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/users/{{adminId}}"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 422", function () {
+          expect(res.status).to.equal(422);
+        });
+
+        test("explains why", function () {
+          expect(res.body.errors).to.include("You cannot delete your own account");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Failure: an admin cannot delete their own account."

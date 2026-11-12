@@ -1,0 +1,29 @@
+info:
+  name: No login - unauthorized
+  type: http
+  seq: 30
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/books"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 401", function () {
+          expect(res.status).to.equal(401);
+        });
+
+        test("returns Unauthorized", function () {
+          expect(res.body.error).to.equal("Unauthorized");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Failure: a request without a session cookie gives 401. If this returns 200 in VS Code, turn off automatic cookies in Bruno's settings."
