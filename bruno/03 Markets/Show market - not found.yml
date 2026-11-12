@@ -1,0 +1,32 @@
+info:
+  name: Show market - not found
+  type: http
+  seq: 22
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/markets/999999"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 404", function () {
+          expect(res.status).to.equal(404);
+        });
+
+        test("returns an error message", function () {
+          expect(res.body.error).to.equal("Market not found");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Failure: an id that does not exist gives 404."

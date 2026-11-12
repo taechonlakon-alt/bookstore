@@ -1,0 +1,42 @@
+info:
+  name: Create category
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/categories"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "category": {
+          "name": "Bruno Category {{runId}}"
+        }
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("categoryId", res.body.id);
+    - type: tests
+      code: |-
+        test("returns 201", function () {
+          expect(res.status).to.equal(201);
+        });
+
+        test("returns the new category", function () {
+          expect(res.body.name).to.equal("Bruno Category " + bru.getVar("runId"));
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin creates a category. Saves its id in `categoryId`."

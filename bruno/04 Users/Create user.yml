@@ -1,0 +1,46 @@
+info:
+  name: Create user
+  type: http
+  seq: 26
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/users"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "user": {
+          "email_address": "bruno-{{runId}}@example.com",
+          "password": "password",
+          "password_confirmation": "password",
+          "role": "user"
+        }
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("userId", res.body.id);
+    - type: tests
+      code: |-
+        test("returns 201", function () {
+          expect(res.status).to.equal(201);
+        });
+
+        test("returns the new user", function () {
+          expect(res.body.email_address).to.equal("bruno-" + bru.getVar("runId") + "@example.com");
+          expect(res.body.role).to.equal("user");
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin creates a user. Saves its id in `userId`."

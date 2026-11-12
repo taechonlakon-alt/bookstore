@@ -1,0 +1,32 @@
+info:
+  name: Show book
+  type: http
+  seq: 14
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/books/{{bookId}}"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 200", function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test("returns the book that was created", function () {
+          expect(res.body.id).to.equal(bru.getVar("bookId"));
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: shows the book created earlier in this run."

@@ -1,0 +1,46 @@
+info:
+  name: Create market
+  type: http
+  seq: 19
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/markets"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "market": {
+          "name": "Bruno Market {{runId}}",
+          "book_ids": [
+            "{{existingBookId}}"
+          ]
+        }
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("marketId", res.body.id);
+    - type: tests
+      code: |-
+        test("returns 201", function () {
+          expect(res.status).to.equal(201);
+        });
+
+        test("returns the new market", function () {
+          expect(res.body.name).to.equal("Bruno Market " + bru.getVar("runId"));
+          expect(res.body.books.map((b) => b.id)).to.include(Number(bru.getVar("existingBookId")));
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin creates a market. Saves its id in `marketId`."

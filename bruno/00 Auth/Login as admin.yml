@@ -1,0 +1,64 @@
+info:
+  name: Login as admin
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/session"
+  headers:
+    - name: Cookie
+      value: "{{csrfCookie}}"
+  body:
+    type: form-urlencoded
+    data:
+      - name: authenticity_token
+        value: "{{csrfToken}}"
+      - name: email_address
+        value: "{{adminEmail}}"
+      - name: password
+        value: "{{password}}"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        // Keep the 302 so we can read the session cookie from it.
+        req.setMaxRedirects(0);
+    - type: after-response
+      code: |-
+        // Read a cookie from this response. The CLI exposes the Set-Cookie header,
+        // but the VS Code extension hides it, so fall back to Bruno's cookie jar.
+        async function readCookie(name) {
+          const fromHeader = [].concat(res.getHeader("set-cookie") || [])
+            .find((c) => c.startsWith(name + "="));
+          if (fromHeader) return fromHeader.split(";")[0];
+
+          const fromJar = await bru.cookies.jar().getCookie(bru.getEnvVar("baseUrl"), name);
+          const value = fromJar && typeof fromJar === "object" ? fromJar.value : fromJar;
+          return value ? name + "=" + value : "";
+        }
+
+        bru.setVar("adminCookie", await readCookie("session_id"));
+
+        // Bruno would otherwise resend stored cookies on every request. Clear its
+        // jar so each request only sends the Cookie header it sets itself.
+        await bru.cookies.jar().clear();
+    - type: tests
+      code: |-
+        test("redirects after login (302)", function () {
+          expect(res.status).to.equal(302);
+        });
+
+        test("sets a session_id cookie", function () {
+          expect(bru.getVar("adminCookie")).to.match(/^session_id=/);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: false
+  maxRedirects: 0
+  forwardAuthorizationHeader: true
+
+docs: Logs in as {{adminEmail}} and saves the session cookie in `adminCookie`.

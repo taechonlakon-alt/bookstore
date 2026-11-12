@@ -1,0 +1,40 @@
+info:
+  name: Update market
+  type: http
+  seq: 23
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/v1/markets/{{marketId}}"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+  body:
+    type: json
+    data: |-
+      {
+        "market": {
+          "name": "Bruno Market {{runId}} (edited)"
+        }
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 200", function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test("returns the updated values", function () {
+          expect(res.body.name).to.match(/\(edited\)$/);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin updates the market."

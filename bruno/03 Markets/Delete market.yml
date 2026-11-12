@@ -1,0 +1,32 @@
+info:
+  name: Delete market
+  type: http
+  seq: 24
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/api/v1/markets/{{marketId}}"
+  headers:
+    - name: Cookie
+      value: "{{adminCookie}}"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("returns 200", function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test("confirms the delete", function () {
+          expect(res.body.message).to.match(/deleted/);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: "Success: an admin deletes the market. This also cleans up the data this run created."

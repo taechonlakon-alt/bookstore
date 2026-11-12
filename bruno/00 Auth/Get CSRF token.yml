@@ -1,0 +1,55 @@
+info:
+  name: Get CSRF token
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/session/new"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        // Read a cookie from this response. The CLI exposes the Set-Cookie header,
+        // but the VS Code extension hides it, so fall back to Bruno's cookie jar.
+        async function readCookie(name) {
+          const fromHeader = [].concat(res.getHeader("set-cookie") || [])
+            .find((c) => c.startsWith(name + "="));
+          if (fromHeader) return fromHeader.split(";")[0];
+
+          const fromJar = await bru.cookies.jar().getCookie(bru.getEnvVar("baseUrl"), name);
+          const value = fromJar && typeof fromJar === "object" ? fromJar.value : fromJar;
+          return value ? name + "=" + value : "";
+        }
+
+        // The login form is protected by CSRF: grab the token from the HTML
+        // and the Rails session cookie it belongs to.
+        const match = res.getBody().match(/name="authenticity_token" value="([^"]+)"/);
+        bru.setVar("csrfToken", match ? match[1] : "");
+        bru.setVar("csrfCookie", await readCookie("_bookstore_session"));
+
+        // Unique suffix so names created by this run never clash with earlier runs.
+        bru.setVar("runId", Date.now());
+
+        // Bruno would otherwise resend stored cookies on every request. Clear its
+        // jar so each request only sends the Cookie header it sets itself.
+        await bru.cookies.jar().clear();
+    - type: tests
+      code: |-
+        test("returns 200", function () {
+          expect(res.status).to.equal(200);
+        });
+
+        test("page contains a CSRF token", function () {
+          expect(bru.getVar("csrfToken")).to.not.be.empty;
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: Loads the login page to get a CSRF token. Run this before the login requests.
