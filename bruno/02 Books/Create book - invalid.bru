@@ -1,0 +1,37 @@
+meta {
+  name: Create book - invalid
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/books
+  body: json
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+body:json {
+  {
+    "book": {
+      "title": ""
+    }
+  }
+}
+
+tests {
+  test("returns 422", function () {
+    expect(res.status).to.equal(422);
+  });
+
+  test("returns validation errors", function () {
+    expect(res.body.errors).to.be.an('array').that.is.not.empty;
+  });
+}
+
+docs {
+  Failure: missing required fields gives 422 with an `errors` list.
+}

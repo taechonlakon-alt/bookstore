@@ -1,0 +1,29 @@
+meta {
+  name: Show book
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/books/{{bookId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns the book that was created", function () {
+    expect(res.body.id).to.equal(bru.getVar("bookId"));
+  });
+}
+
+docs {
+  Success: shows the book created earlier in this run.
+}

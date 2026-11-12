@@ -1,0 +1,29 @@
+meta {
+  name: Show category
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns the category that was created", function () {
+    expect(res.body.id).to.equal(bru.getVar("categoryId"));
+  });
+}
+
+docs {
+  Success: shows the category created earlier in this run.
+}

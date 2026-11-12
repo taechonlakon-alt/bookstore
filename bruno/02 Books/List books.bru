@@ -1,0 +1,34 @@
+meta {
+  name: List books
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/v1/books
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+script:post-response {
+  // Markets are created with an existing book, so remember one.
+  bru.setVar("existingBookId", res.body[0].id);
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns an array", function () {
+    expect(res.body).to.be.an('array').that.is.not.empty;
+  });
+}
+
+docs {
+  Success: lists every book.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: List markets
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/v1/markets
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns an array", function () {
+    expect(res.body).to.be.an('array').that.is.not.empty;
+  });
+}
+
+docs {
+  Success: lists every market.
+}

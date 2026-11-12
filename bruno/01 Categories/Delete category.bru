@@ -1,0 +1,29 @@
+meta {
+  name: Delete category
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("confirms the delete", function () {
+    expect(res.body.message).to.match(/deleted/);
+  });
+}
+
+docs {
+  Success: an admin deletes the category. This also cleans up the data this run created.
+}

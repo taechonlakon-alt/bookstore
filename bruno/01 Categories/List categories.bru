@@ -1,0 +1,35 @@
+meta {
+  name: List categories
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/categories
+  body: none
+  auth: none
+}
+
+headers {
+  Cookie: {{adminCookie}}
+}
+
+script:post-response {
+  // Books are created in an existing category, so remember one.
+  bru.setVar("existingCategoryId", res.body[0].id);
+}
+
+tests {
+  test("returns 200", function () {
+    expect(res.status).to.equal(200);
+  });
+
+  test("returns an array", function () {
+    expect(res.body).to.be.an('array').that.is.not.empty;
+  });
+}
+
+docs {
+  Success: lists every category.
+}
+​
