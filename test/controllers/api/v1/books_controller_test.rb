@@ -11,7 +11,7 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "logged-in user can read" do
-    sign_in_as! users(:regular)
+    sign_in_as users(:regular)
     get api_v1_books_path, as: :json
     assert_response :ok
     assert_includes response.parsed_body.map { _1["title"] }, "Dune"
@@ -25,14 +25,14 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "unknown id is 404 with message" do
-    sign_in_as! users(:regular)
+    sign_in_as users(:regular)
     get api_v1_book_path(id: 999_999), as: :json
     assert_response :not_found
     assert_equal "Book not found", response.parsed_body["error"]
   end
 
   test "non-admin cannot write" do
-    sign_in_as! users(:regular)
+    sign_in_as users(:regular)
     assert_no_difference("Book.count") do
       post api_v1_books_path, params: { book: { title: "X", category_id: categories(:fiction).id } }, as: :json
       assert_response :forbidden
@@ -46,7 +46,7 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin creates, updates and deletes" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     post api_v1_books_path, params: { book: { title: "New", category_id: categories(:fiction).id } }, as: :json
     assert_response :created
     id = response.parsed_body["id"]
@@ -63,7 +63,7 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid book gives 422 with errors" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     post api_v1_books_path, params: { book: { title: "" } }, as: :json
     assert_response :unprocessable_entity
     assert_includes response.parsed_body["errors"], "Title can't be blank"
@@ -73,7 +73,7 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update or delete unknown id is 404" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     patch api_v1_book_path(id: 999_999), params: { book: { title: "X" } }, as: :json
     assert_response :not_found
     delete api_v1_book_path(id: 999_999), as: :json

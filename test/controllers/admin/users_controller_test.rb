@@ -2,7 +2,7 @@ require "test_helper"
 
 class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   test "non-admin is blocked" do
-    sign_in_as! users(:regular)
+    sign_in_as users(:regular)
     get new_admin_user_path
     assert_redirected_to root_path
     assert_no_difference("User.count") do
@@ -12,7 +12,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin creates a user who can log in" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     get new_admin_user_path
     assert_response :success
     assert_difference("User.count", 1) do
@@ -25,13 +25,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can create another admin" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     post admin_users_path, params: { user: { email_address: "boss@example.com", password: "p", password_confirmation: "p", role: "admin" } }
     assert User.find_by(email_address: "boss@example.com").admin?
   end
 
   test "duplicate email re-renders with 422" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     assert_no_difference("User.count") do
       post admin_users_path, params: { user: { email_address: "ADMIN@example.com", password: "p", password_confirmation: "p", role: "user" } }
     end
@@ -40,14 +40,14 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "mismatched password confirmation re-renders with 422" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     post admin_users_path, params: { user: { email_address: "z@example.com", password: "a", password_confirmation: "b", role: "user" } }
     assert_response :unprocessable_entity
     assert_match "Password confirmation doesn&#39;t match", response.body
   end
 
   test "user list shows users, never password digests" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     get admin_users_path
     assert_response :success
     assert_match "regular@example.com", response.body
@@ -56,13 +56,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "dashboard links to users" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     get admin_root_path
     assert_select "a[href=?]", admin_users_path
   end
 
   test "invalid role re-renders with 422" do
-    sign_in_as! users(:admin)
+    sign_in_as users(:admin)
     post admin_users_path, params: { user: { email_address: "r@example.com", password: "p", password_confirmation: "p", role: "boss" } }
     assert_response :unprocessable_entity
   end
