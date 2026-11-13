@@ -50,11 +50,11 @@ class Api::V1::CategoriesController < Api::V1::BaseController
 
   private
 
-  def category_params
-    params.expect(category: [ :name ])
-  end
-
   def json_options
     { only: [ :id, :name ], include: { books: { only: [ :id, :title ] } } }
+  end
+
+  def category_params
+    params.expect(category: [ :name ])
   end
 end

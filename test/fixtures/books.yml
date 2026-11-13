@@ -1,0 +1,11 @@
+dune:
+  title: Dune
+  author: Frank Herbert
+  description: A desert planet saga.
+  category: fiction
+
+cosmos:
+  title: Cosmos
+  author: Carl Sagan
+  description: A journey through the universe.
+  category: science

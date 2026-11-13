@@ -50,11 +50,11 @@ class Api::V1::MarketsController < Api::V1::BaseController
 
   private
 
-  def market_params
-    params.expect(market: [ :name, book_ids: [] ])
-  end
-
   def json_options
     { only: [ :id, :name ], include: { books: { only: [ :id, :title ] } } }
+  end
+
+  def market_params
+    params.expect(market: [ :name, book_ids: [] ])
   end
 end

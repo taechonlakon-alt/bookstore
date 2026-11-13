@@ -1,0 +1,11 @@
+central_dune:
+  market: central
+  book: dune
+
+central_cosmos:
+  market: central
+  book: cosmos
+
+online_dune:
+  market: online
+  book: dune
