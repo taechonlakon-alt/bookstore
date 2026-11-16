@@ -25,6 +25,9 @@ gem "bcrypt", "~> 3.1.7"
 # Flexible authentication solution for Rails [https://github.com/heartcombo/devise]
 gem "devise", "~> 5.0"
 
+# Role management [https://github.com/RolifyCommunity/rolify]
+gem "rolify", "~> 6.0"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

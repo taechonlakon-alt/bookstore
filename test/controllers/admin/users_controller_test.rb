@@ -20,7 +20,7 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to admin_users_path
     user = User.find_by(email: "new@example.com")
-    assert user.user?
+    assert_equal "user", user.role
     assert user.valid_password?("secret123")
   end
 

@@ -59,7 +59,7 @@ class Api::V1::UsersController < Api::V1::BaseController
   private
 
   def json_options
-    { only: [ :id, :email, :role, :created_at ] }
+    { only: [ :id, :email, :created_at ], methods: [ :role ] }
   end
 
   def user_params

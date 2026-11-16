@@ -26,7 +26,7 @@
 
   <div>
     <%= form.label :role, class: "block mb-1" %>
-    <%= form.select :role, User.roles.keys, {}, class: "w-full border border-gray-300 rounded px-3 py-2" %>
+    <%= form.select :role, User::ROLES, {}, class: "w-full border border-gray-300 rounded px-3 py-2" %>
   </div>
 
   <div class="flex items-center gap-4">

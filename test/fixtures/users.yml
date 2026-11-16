@@ -3,9 +3,9 @@
 admin:
   email: admin@example.com
   encrypted_password: <%= encrypted_password %>
-  role: admin
+  roles: admin
 
 regular:
   email: regular@example.com
   encrypted_password: <%= encrypted_password %>
-  role: user
+  roles: user
