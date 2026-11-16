@@ -30,7 +30,7 @@ class Api::V1::UsersController < Api::V1::BaseController
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
 
-    if user == Current.user && user_params.key?(:role) && user_params[:role] != user.role
+    if user == current_user && user_params.key?(:role) && user_params[:role] != user.role
       return render json: { errors: [ "You cannot change your own role" ] }, status: :unprocessable_entity
     end
 
@@ -45,7 +45,7 @@ class Api::V1::UsersController < Api::V1::BaseController
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
 
-    if user == Current.user
+    if user == current_user
       return render json: { errors: [ "You cannot delete your own account" ] }, status: :unprocessable_entity
     end
 
@@ -59,10 +59,10 @@ class Api::V1::UsersController < Api::V1::BaseController
   private
 
   def json_options
-    { only: [ :id, :email_address, :role, :created_at ] }
+    { only: [ :id, :email, :role, :created_at ] }
   end
 
   def user_params
-    params.expect(user: [ :email_address, :password, :password_confirmation, :role ])
+    params.expect(user: [ :email, :password, :password_confirmation, :role ])
   end
 end

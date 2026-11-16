@@ -1,11 +1,11 @@
 # Idempotent: safe to run `bin/rails db:seed` more than once.
 
-User.find_or_create_by!(email_address: "admin@example.com") do |user|
+User.find_or_create_by!(email: "admin@example.com") do |user|
   user.password = "password"
   user.role = "admin"
 end
 
-User.find_or_create_by!(email_address: "user@example.com") do |user|
+User.find_or_create_by!(email: "user@example.com") do |user|
   user.password = "password"
   user.role = "user"
 end

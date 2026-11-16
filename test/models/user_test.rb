@@ -1,13 +1,12 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  test "downcases and strips email_address" do
-    user = User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
-    assert_equal("downcased@example.com", user.email_address)
+  test "new users default to user role" do
+    assert User.create!(email: "n@example.com", password: "password").user?
   end
 
-  test "new users default to user role" do
-    assert User.create!(email_address: "n@example.com", password: "password").user?
+  test "email is downcased and stripped" do
+    assert_equal "x@example.com", User.create!(email: " X@Example.com ", password: "secret123").email
   end
 
   test "admin fixture is admin" do
@@ -15,7 +14,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "email must be unique ignoring case" do
-    assert_not User.new(email_address: "ADMIN@example.com", password: "password").valid?
+    assert_not User.new(email: "ADMIN@example.com", password: "password").valid?
   end
 
   test "email is required" do
@@ -23,7 +22,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "invalid role is a validation error, not an exception" do
-    user = User.new(email_address: "r@example.com", password: "password", role: "boss")
+    user = User.new(email: "r@example.com", password: "password", role: "boss")
     assert_not user.valid?
     assert_includes user.errors[:role], "is not included in the list"
   end

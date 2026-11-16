@@ -1,6 +1,6 @@
 class Admin::UsersController < Admin::BaseController
   def index
-    @users = User.order(:email_address)
+    @users = User.order(:email)
   end
 
   def new
@@ -19,6 +19,6 @@ class Admin::UsersController < Admin::BaseController
   private
 
   def user_params
-    params.expect(user: [ :email_address, :password, :password_confirmation, :role ])
+    params.expect(user: [ :email, :password, :password_confirmation, :role ])
   end
 end
