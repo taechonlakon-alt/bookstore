@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: { sessions: "users/sessions", passwords: "users/passwords" }
+  ActiveAdmin.routes(self)
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -12,14 +13,6 @@ Rails.application.routes.draw do
 
   resources :books, only: %i[index show]
   root "books#index"
-
-  namespace :admin do
-    root "dashboard#index"
-    resources :books, except: :show
-    resources :categories, except: :show
-    resources :markets, except: :show
-    resources :users, only: %i[index new create]
-  end
 
   namespace :api do
     namespace :v1 do

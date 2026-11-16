@@ -31,6 +31,9 @@ gem "rolify", "~> 6.0"
 # Authorization policies [https://github.com/varvet/pundit]
 gem "pundit", "~> 2.5"
 
+# Admin dashboard framework [https://github.com/activeadmin/activeadmin]
+gem "activeadmin", "4.0.0.beta23"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
