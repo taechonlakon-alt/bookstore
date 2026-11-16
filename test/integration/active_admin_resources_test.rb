@@ -93,6 +93,30 @@ class ActiveAdminResourcesTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "batch delete refuses the whole batch when the admin's own user comes last" do
+    sign_in users(:admin)
+    assert_no_difference("User.count") do
+      post batch_action_admin_users_path, params: { batch_action: "destroy", collection_selection: [ users(:regular).id, users(:admin).id ] }
+    end
+    assert_redirected_to admin_users_path
+    assert_equal "You cannot delete your own account", flash[:alert]
+  end
+
+  test "batch delete removes only other users" do
+    sign_in users(:admin)
+    assert_difference("User.count", -1) do
+      post batch_action_admin_users_path, params: { batch_action: "destroy", collection_selection: [ users(:regular).id ] }
+    end
+    assert_redirected_to admin_users_path
+  end
+
+  test "regular user cannot batch delete users" do
+    sign_in users(:regular)
+    assert_no_difference("User.count") do
+      post batch_action_admin_users_path, params: { batch_action: "destroy", collection_selection: [ users(:admin).id ] }
+    end
+  end
+
   test "admin can delete another user" do
     sign_in users(:admin)
     assert_difference("User.count", -1) { delete admin_user_path(users(:regular)) }

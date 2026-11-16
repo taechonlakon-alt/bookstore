@@ -15,6 +15,24 @@ ActiveAdmin.register User do
   filter :email
   filter :created_at
 
+  config.add_batch_action(
+    :destroy,
+    proc { I18n.t("active_admin.delete") },
+    priority: 100,
+    confirm: proc { I18n.t("active_admin.batch_actions.delete_confirmation", plural_model: "users") },
+    if: proc { destroy_action_authorized?(User) }
+  ) do |selected_ids|
+    if selected_ids.map(&:to_s).include?(current_user.id.to_s)
+      redirect_to admin_users_path, alert: "You cannot delete your own account"
+    else
+      batch_action_collection.find(selected_ids).each do |user|
+        authorize! ActiveAdmin::Auth::DESTROY, user
+        destroy_resource(user)
+      end
+      redirect_to admin_users_path, notice: I18n.t("active_admin.batch_actions.successfully_destroyed", count: selected_ids.count, model: "user", plural_model: "users")
+    end
+  end
+
   show do
     attributes_table do
       row :email
