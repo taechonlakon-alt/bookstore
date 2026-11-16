@@ -15,7 +15,7 @@ http:
       - name: authenticity_token
         value: "{{csrfToken}}"
       - name: user[email]
-        value: "{{userEmail}}"
+        value: "{{process.env.USER_EMAIL}}"
       - name: user[password]
         value: "{{process.env.USER_PASSWORD}}"
 
@@ -61,4 +61,4 @@ settings:
   maxRedirects: 0
   forwardAuthorizationHeader: true
 
-docs: Logs in as {{userEmail}} and saves the session cookie in `userCookie`.
+docs: Logs in as the account in `USER_EMAIL` (from `bruno/.env`) and saves the session cookie in `userCookie`.

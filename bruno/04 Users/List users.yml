@@ -15,7 +15,7 @@ runtime:
     - type: after-response
       code: |-
         // Remember the logged-in admin's id for the "delete yourself" case.
-        const admin = res.body.find((u) => u.email === bru.getEnvVar("adminEmail"));
+        const admin = res.body.find((u) => u.email === bru.getProcessEnv("ADMIN_EMAIL"));
         bru.setVar("adminId", admin ? admin.id : "");
     - type: tests
       code: |-

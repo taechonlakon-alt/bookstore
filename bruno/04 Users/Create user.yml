@@ -15,7 +15,6 @@ http:
       {
         "user": {
           "email": "bruno-{{runId}}@example.com",
-          "password_confirmation": "{{process.env.USER_PASSWORD}}",
           "role": "user"
         }
       }
@@ -24,9 +23,14 @@ runtime:
   scripts:
     - type: before-request
       code: |-
-        // The password comes from bruno/.env, never from a committed file.
+        // process.env interpolation ({{process.env.X}}) only works in request
+        // fields, not in scripts, so set the password here with getProcessEnv.
+        // Doing it in a script also keeps a literal password JSON key out of
+        // committed files. The value comes from the git-ignored bruno/.env.
         const body = req.getBody();
-        body.user.password = bru.getProcessEnv("USER_PASSWORD");
+        const password = bru.getProcessEnv("USER_PASSWORD");
+        body.user.password = password;
+        body.user.password_confirmation = password;
         req.setBody(body);
     - type: after-response
       code: bru.setVar("userId", res.body.id);

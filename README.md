@@ -114,7 +114,7 @@ Example response for `GET /api/v1/books/1`:
 The `bruno/` folder is a [Bruno](https://www.usebruno.com/) collection that covers auth, CRUD for each resource, and permission checks. To run it:
 
 1. Start the app with `bin/dev` and seed the database.
-2. Copy `bruno/.env.example` to `bruno/.env` and set `ADMIN_PASSWORD` and `USER_PASSWORD` to the passwords you seeded. `bruno/.env` is git-ignored. Bruno reads it as `process.env`, and the `local` environment holds no passwords.
+2. Copy `bruno/.env.example` to `bruno/.env` and give it the same four values as your root `.env`: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `USER_EMAIL` and `USER_PASSWORD`. `bruno/.env` is git-ignored. Bruno reads it as `process.env`, and the `local` environment holds no emails or passwords.
 3. Open `bruno/` in Bruno (or the VS Code extension) and select the `local` environment.
 4. Run the collection in order, starting with `00 Auth`. From a terminal: `cd bruno && bru run --env local`.
 

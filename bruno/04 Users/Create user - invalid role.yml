@@ -23,7 +23,10 @@ runtime:
   scripts:
     - type: before-request
       code: |-
-        // The password comes from bruno/.env, never from a committed file.
+        // process.env interpolation ({{process.env.X}}) only works in request
+        // fields, not in scripts, so set the password here with getProcessEnv.
+        // Doing it in a script also keeps a literal password JSON key out of
+        // committed files. The value comes from the git-ignored bruno/.env.
         const body = req.getBody();
         body.user.password = bru.getProcessEnv("USER_PASSWORD");
         req.setBody(body);
@@ -35,6 +38,10 @@ runtime:
 
         test("says the role is invalid", function () {
           expect(res.body.errors.join(" ")).to.match(/Role/);
+        });
+
+        test("fails only because of the role, not the password", function () {
+          expect(res.body.errors.join(" ")).to.not.match(/Password/);
         });
 
 settings:
