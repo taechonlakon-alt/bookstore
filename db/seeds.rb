@@ -1,13 +1,15 @@
 # Idempotent: safe to run `bin/rails db:seed` more than once.
+# Development only. Credentials come from the environment (see .env.example).
+return unless Rails.env.development?
 
-User.find_or_create_by!(email: "admin@example.com") do |user|
-  user.password = "password"
-  user.role = "admin"
-end
-
-User.find_or_create_by!(email: "user@example.com") do |user|
-  user.password = "password"
-  user.role = "user"
+[
+  { email: ENV.fetch("ADMIN_EMAIL"), password: ENV.fetch("ADMIN_PASSWORD"), role: "admin" },
+  { email: ENV.fetch("USER_EMAIL"), password: ENV.fetch("USER_PASSWORD"), role: "user" }
+].each do |attrs|
+  user = User.find_or_initialize_by(email: attrs[:email])
+  user.password = attrs[:password] if user.new_record?
+  user.role = attrs[:role]
+  user.save!
 end
 
 books = {

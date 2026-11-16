@@ -1,19 +1,20 @@
 # Bookstore
 
-A Rails 8 bookstore app. Signed-in users browse and search a book catalog. Admins manage books, categories, markets (stores that stock books), and users through an admin panel and a JSON API.
+A Rails 8 bookstore app. Signed-in users browse and search a book catalog. Admins manage books, categories, markets (stores that stock books), and users through an ActiveAdmin panel and a JSON API.
 
 ## Features
 
 - **Catalog**: list books, search by title, and filter by category (`/books`)
-- **Admin panel**: CRUD for books, categories, and markets, plus user creation (`/admin`)
+- **Admin panel**: ActiveAdmin at `/admin` for books, categories, markets, and users (admin role only)
 - **JSON API**: `/api/v1` endpoints for books, categories, markets, and users
-- **Authentication**: Rails 8 built-in sessions and password reset, with `user` and `admin` roles
+- **Authentication**: Devise (sign up, sign in, password reset), Rolify for the `user` and `admin` roles, and Pundit for authorization
 
 ## Tech stack
 
 | Area | Choice |
 | --- | --- |
 | Language / framework | Ruby 4.0.9, Rails 8.1 |
+| Auth | Devise, Rolify, Pundit, ActiveAdmin v4 |
 | Database | PostgreSQL |
 | Frontend | Hotwire (Turbo + Stimulus), Tailwind CSS, import maps |
 | Background jobs / cache / cable | Solid Queue, Solid Cache, Solid Cable |
@@ -32,11 +33,13 @@ A Rails 8 bookstore app. Signed-in users browse and search a book catalog. Admin
 ```bash
 git clone https://github.com/taechonlakon-alt/bookstore.git
 cd bookstore
-bin/setup            # installs gems, prepares the database, starts the server
-bin/rails db:seed    # loads sample users, categories, books, and markets
+cp .env.example .env      # then fill in the four values (see "Seed accounts")
+set -a; source .env; set +a
+bin/setup --skip-server   # installs gems, prepares the database, seeds a new one
+bin/rails db:seed         # re-run any time to (re)load sample data
 ```
 
-`bin/setup` finishes by starting the dev server. To set up without starting the server, run `bin/setup --skip-server`.
+Set the variables before `bin/setup`: when it creates a new database, Rails seeds it, and the seeds need them. The app has no dotenv, so `source .env` is what puts the variables in your shell. `.env` is git-ignored. `bin/setup` normally ends by starting the dev server; `--skip-server` stops that.
 
 By default the app connects to PostgreSQL over a local socket as your OS user. If your database needs a username, password, or host, set `DATABASE_URL` instead of editing `config/database.yml`:
 
@@ -50,18 +53,18 @@ export DATABASE_URL=postgres://<user>:<password>@localhost:5432
 bin/dev
 ```
 
-This starts the Rails server and the Tailwind watcher (see `Procfile.dev`). Open <http://localhost:3000>.
+This starts the Rails server, the Tailwind watcher (`css`), and the ActiveAdmin stylesheet watcher (`css_admin`). See `Procfile.dev`. Open <http://localhost:3000>.
 
 ### Seed accounts
 
-`db/seeds.rb` creates two **development-only** accounts:
+`db/seeds.rb` creates two **development-only** accounts. It does nothing outside the development environment, and it reads their credentials from the environment, so no password is committed:
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Admin | `admin@example.com` | `password` |
-| User | `user@example.com` | `password` |
+| Variable | Used for |
+| --- | --- |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | The admin account |
+| `USER_EMAIL`, `USER_PASSWORD` | The regular user account |
 
-Never run these seeds against a production database.
+Choose your own values in `.env` (copy `.env.example`). Passwords need at least 6 characters. If a variable is missing, `bin/rails db:seed` fails with a `KeyError`. Seeding is idempotent: an existing account keeps its current password, and only its role is re-applied.
 
 ## Usage
 
@@ -69,14 +72,15 @@ Never run these seeds against a production database.
 
 | Path | Who | What |
 | --- | --- | --- |
-| `/session/new` | Everyone | Sign in |
+| `/users/sign_in` | Everyone | Sign in |
+| `/users/sign_up` | Everyone | Create a `user` account |
 | `/books` | Signed-in users | Browse, search, and filter books |
-| `/admin` | Admins | Manage books, categories, markets, and users |
+| `/admin` | Admins | ActiveAdmin panel for books, categories, markets, and users |
 | `/up` | Everyone | Health check (200 when the app boots) |
 
 ### JSON API
 
-All endpoints live under `/api/v1` and use the same session cookie as the web app, so sign in through `POST /session` first.
+All endpoints live under `/api/v1` and use the same session cookie (`_bookstore_session`) as the web app, so sign in through the Devise form (`POST /users/sign_in`) first. Sign-in is rate limited to 10 attempts per 3 minutes per IP.
 
 | Resource | Read (`GET`) | Write (`POST` / `PATCH` / `DELETE`) |
 | --- | --- | --- |
@@ -110,8 +114,11 @@ Example response for `GET /api/v1/books/1`:
 The `bruno/` folder is a [Bruno](https://www.usebruno.com/) collection that covers auth, CRUD for each resource, and permission checks. To run it:
 
 1. Start the app with `bin/dev` and seed the database.
-2. Open `bruno/` in Bruno (or the VS Code extension) and select the `local` environment.
-3. Run the collection in order, starting with `00 Auth`.
+2. Copy `bruno/.env.example` to `bruno/.env` and set `ADMIN_PASSWORD` and `USER_PASSWORD` to the passwords you seeded. `bruno/.env` is git-ignored. Bruno reads it as `process.env`, and the `local` environment holds no passwords.
+3. Open `bruno/` in Bruno (or the VS Code extension) and select the `local` environment.
+4. Run the collection in order, starting with `00 Auth`. From a terminal: `cd bruno && bru run --env local`.
+
+Sign-in is rate limited, so avoid running the collection more than a few times in 3 minutes (each run signs in twice).
 
 ## Development
 
@@ -145,10 +152,12 @@ Read [CODING_STANDARDS.md](CODING_STANDARDS.md) before you open a pull request.
 ```
 app/
   controllers/
-    admin/        # admin panel (requires admin role)
     api/v1/       # JSON API
-    concerns/     # authentication
-  models/         # Book, Category, Market, MarketBook, User, Session
+    users/        # Devise controllers (sessions, passwords)
+    concerns/
+  admin/          # ActiveAdmin resources (admin role only)
+  models/         # Book, Category, Market, MarketBook, User, Role
+  policies/       # Pundit policies
   views/
 bruno/            # Bruno API test collection
 config/deploy.yml # Kamal deployment config

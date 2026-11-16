@@ -9,6 +9,12 @@ http:
 
 runtime:
   scripts:
+    - type: before-request
+      code: |-
+        // Devise reissues the session cookie on API responses, so Bruno's jar
+        // holds a signed-in cookie by now. Clear it so only the Cookie header
+        // set above (if any) is sent.
+        await bru.cookies.jar().clear();
     - type: tests
       code: |-
         test("returns 401", function () {

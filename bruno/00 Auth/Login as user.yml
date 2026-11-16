@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{baseUrl}}/session"
+  url: "{{baseUrl}}/users/sign_in"
   headers:
     - name: Cookie
       value: "{{csrfCookie}}"
@@ -14,16 +14,16 @@ http:
     data:
       - name: authenticity_token
         value: "{{csrfToken}}"
-      - name: email_address
+      - name: user[email]
         value: "{{userEmail}}"
-      - name: password
-        value: "{{password}}"
+      - name: user[password]
+        value: "{{process.env.USER_PASSWORD}}"
 
 runtime:
   scripts:
     - type: before-request
       code: |-
-        // Keep the 302 so we can read the session cookie from it.
+        // Keep the redirect so we can read the session cookie from it.
         req.setMaxRedirects(0);
     - type: after-response
       code: |-
@@ -39,19 +39,19 @@ runtime:
           return value ? name + "=" + value : "";
         }
 
-        bru.setVar("userCookie", await readCookie("session_id"));
+        bru.setVar("userCookie", await readCookie("_bookstore_session"));
 
         // Bruno would otherwise resend stored cookies on every request. Clear its
         // jar so each request only sends the Cookie header it sets itself.
         await bru.cookies.jar().clear();
     - type: tests
       code: |-
-        test("redirects after login (302)", function () {
-          expect(res.status).to.equal(302);
+        test("redirects after login (303)", function () {
+          expect(res.status).to.equal(303);
         });
 
-        test("sets a session_id cookie", function () {
-          expect(bru.getVar("userCookie")).to.match(/^session_id=/);
+        test("sets a _bookstore_session cookie", function () {
+          expect(bru.getVar("userCookie")).to.match(/^_bookstore_session=/);
         });
 
 settings:

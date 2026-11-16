@@ -14,15 +14,20 @@ http:
     data: |-
       {
         "user": {
-          "email_address": "bruno-{{runId}}@example.com",
-          "password": "password",
-          "password_confirmation": "password",
+          "email": "bruno-{{runId}}@example.com",
+          "password_confirmation": "{{process.env.USER_PASSWORD}}",
           "role": "user"
         }
       }
 
 runtime:
   scripts:
+    - type: before-request
+      code: |-
+        // The password comes from bruno/.env, never from a committed file.
+        const body = req.getBody();
+        body.user.password = bru.getProcessEnv("USER_PASSWORD");
+        req.setBody(body);
     - type: after-response
       code: bru.setVar("userId", res.body.id);
     - type: tests
@@ -32,7 +37,7 @@ runtime:
         });
 
         test("returns the new user", function () {
-          expect(res.body.email_address).to.equal("bruno-" + bru.getVar("runId") + "@example.com");
+          expect(res.body.email).to.equal("bruno-" + bru.getVar("runId") + "@example.com");
           expect(res.body.role).to.equal("user");
         });
 

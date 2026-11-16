@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/session/new"
+  url: "{{baseUrl}}/users/sign_in"
 
 runtime:
   scripts:
@@ -52,4 +52,4 @@ settings:
   maxRedirects: 5
   forwardAuthorizationHeader: true
 
-docs: Loads the login page to get a CSRF token. Run this before the login requests.
+docs: Loads the Devise sign-in page to get a CSRF token. Run this before the login requests.

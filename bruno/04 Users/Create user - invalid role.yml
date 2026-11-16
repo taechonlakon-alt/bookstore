@@ -14,14 +14,19 @@ http:
     data: |-
       {
         "user": {
-          "email_address": "bruno-bad-{{runId}}@example.com",
-          "password": "password",
+          "email": "bruno-bad-{{runId}}@example.com",
           "role": "superuser"
         }
       }
 
 runtime:
   scripts:
+    - type: before-request
+      code: |-
+        // The password comes from bruno/.env, never from a committed file.
+        const body = req.getBody();
+        body.user.password = bru.getProcessEnv("USER_PASSWORD");
+        req.setBody(body);
     - type: tests
       code: |-
         test("returns 422", function () {
