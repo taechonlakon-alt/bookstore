@@ -1,12 +1,12 @@
 class Api::V1::MarketsController < Api::V1::BaseController
-  before_action :require_admin, only: %i[create update destroy]
-
   def index
+    authorize Market
     markets = Market.includes(:books).order(:id)
     render json: markets, **json_options, status: :ok
   end
 
   def show
+    authorize Market
     market = Market.find_by(id: params[:id])
 
     if market.present?
@@ -17,6 +17,7 @@ class Api::V1::MarketsController < Api::V1::BaseController
   end
 
   def create
+    authorize Market
     market = Market.new(market_params)
 
     if market.save
@@ -27,6 +28,7 @@ class Api::V1::MarketsController < Api::V1::BaseController
   end
 
   def update
+    authorize Market
     market = Market.find_by(id: params[:id])
     return render json: { error: "Market not found" }, status: :not_found if market.nil?
 
@@ -38,6 +40,7 @@ class Api::V1::MarketsController < Api::V1::BaseController
   end
 
   def destroy
+    authorize Market
     market = Market.find_by(id: params[:id])
     return render json: { error: "Market not found" }, status: :not_found if market.nil?
 

@@ -28,6 +28,9 @@ gem "devise", "~> 5.0"
 # Role management [https://github.com/RolifyCommunity/rolify]
 gem "rolify", "~> 6.0"
 
+# Authorization policies [https://github.com/varvet/pundit]
+gem "pundit", "~> 2.5"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

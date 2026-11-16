@@ -1,12 +1,12 @@
 class Api::V1::UsersController < Api::V1::BaseController
-  before_action :require_admin
-
   def index
+    authorize User
     users = User.order(:id)
     render json: users, **json_options, status: :ok
   end
 
   def show
+    authorize User
     user = User.find_by(id: params[:id])
 
     if user.present?
@@ -17,6 +17,7 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def create
+    authorize User
     user = User.new(user_params)
 
     if user.save
@@ -27,6 +28,7 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def update
+    authorize User
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
 
@@ -42,6 +44,7 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def destroy
+    authorize User
     user = User.find_by(id: params[:id])
     return render json: { error: "User not found" }, status: :not_found if user.nil?
 

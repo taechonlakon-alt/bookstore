@@ -45,6 +45,13 @@ class Api::V1::BooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Dune", books(:dune).reload.title
   end
 
+  test "non-admin gets 403 before 404 on unknown id" do
+    sign_in users(:regular)
+    patch api_v1_book_path(id: 999_999), params: { book: { title: "X" } }, as: :json
+    assert_response :forbidden
+    assert_equal "Forbidden", response.parsed_body["error"]
+  end
+
   test "admin creates, updates and deletes" do
     sign_in users(:admin)
     post api_v1_books_path, params: { book: { title: "New", category_id: categories(:fiction).id } }, as: :json

@@ -1,12 +1,12 @@
 class Api::V1::BooksController < Api::V1::BaseController
-  before_action :require_admin, only: %i[create update destroy]
-
   def index
+    authorize Book
     books = Book.includes(:category, :markets).order(:id)
     render json: books, **json_options, status: :ok
   end
 
   def show
+    authorize Book
     book = Book.find_by(id: params[:id])
 
     if book.present?
@@ -17,6 +17,7 @@ class Api::V1::BooksController < Api::V1::BaseController
   end
 
   def create
+    authorize Book
     book = Book.new(book_params)
 
     if book.save
@@ -27,6 +28,7 @@ class Api::V1::BooksController < Api::V1::BaseController
   end
 
   def update
+    authorize Book
     book = Book.find_by(id: params[:id])
     return render json: { error: "Book not found" }, status: :not_found if book.nil?
 
@@ -38,6 +40,7 @@ class Api::V1::BooksController < Api::V1::BaseController
   end
 
   def destroy
+    authorize Book
     book = Book.find_by(id: params[:id])
     return render json: { error: "Book not found" }, status: :not_found if book.nil?
 

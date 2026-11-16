@@ -1,12 +1,12 @@
 class Api::V1::CategoriesController < Api::V1::BaseController
-  before_action :require_admin, only: %i[create update destroy]
-
   def index
+    authorize Category
     categories = Category.includes(:books).order(:id)
     render json: categories, **json_options, status: :ok
   end
 
   def show
+    authorize Category
     category = Category.find_by(id: params[:id])
 
     if category.present?
@@ -17,6 +17,7 @@ class Api::V1::CategoriesController < Api::V1::BaseController
   end
 
   def create
+    authorize Category
     category = Category.new(category_params)
 
     if category.save
@@ -27,6 +28,7 @@ class Api::V1::CategoriesController < Api::V1::BaseController
   end
 
   def update
+    authorize Category
     category = Category.find_by(id: params[:id])
     return render json: { error: "Category not found" }, status: :not_found if category.nil?
 
@@ -38,6 +40,7 @@ class Api::V1::CategoriesController < Api::V1::BaseController
   end
 
   def destroy
+    authorize Category
     category = Category.find_by(id: params[:id])
     return render json: { error: "Category not found" }, status: :not_found if category.nil?
 

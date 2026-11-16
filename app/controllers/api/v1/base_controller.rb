@@ -1,6 +1,7 @@
 class Api::V1::BaseController < ApplicationController
   skip_forgery_protection
   before_action :authenticate_api_user!
+  after_action :verify_authorized
 
   private
 
@@ -9,7 +10,7 @@ class Api::V1::BaseController < ApplicationController
     render json: { error: "Unauthorized" }, status: :unauthorized unless user_signed_in?
   end
 
-  def require_admin
-    render json: { error: "Forbidden" }, status: :forbidden unless current_user.admin?
+  def user_not_authorized
+    render json: { error: "Forbidden" }, status: :forbidden
   end
 end
