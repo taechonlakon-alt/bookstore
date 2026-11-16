@@ -1,6 +1,14 @@
 class User < ApplicationRecord
   ROLES = %w[admin user].freeze
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[email created_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[roles]
+  end
+
   rolify
   devise :database_authenticatable, :registerable, :recoverable, :rememberable, :validatable
 
