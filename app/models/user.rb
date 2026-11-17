@@ -29,6 +29,11 @@ class User < ApplicationRecord
     has_role?(:admin)
   end
 
+  def reload(*)
+    @assigned_role = nil
+    super
+  end
+
   private
 
   def persisted_role
