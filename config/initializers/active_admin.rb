@@ -95,7 +95,7 @@ ActiveAdmin.setup do |config|
   # ActiveAdmin runs this with instance_exec on the controller. A symbol would be
   # called publicly with the exception, but ApplicationController#user_not_authorized
   # is private and takes no arguments, so a block calls it instead.
-  config.on_unauthorized_access = proc { user_not_authorized }
+  config.on_unauthorized_access = proc { redirect_to main_app.root_path, alert: "You are not authorized to perform this action." }
 
   # == Current User
   #
@@ -164,7 +164,7 @@ ActiveAdmin.setup do |config|
   # You can exclude possibly sensitive model attributes from being displayed,
   # added to forms, or exported by default by ActiveAdmin
   #
-  config.filter_attributes = [ :encrypted_password, :password, :password_confirmation ]
+  config.filter_attributes = [ :encrypted_password, :password, :password_confirmation, :reset_password_token, :reset_password_sent_at, :remember_created_at ]
 
   # == Localize Date/Time Format
   #
@@ -230,6 +230,9 @@ ActiveAdmin.setup do |config|
   #     admin.download_links = proc { can?(:view_download_links) }
   #
   #   end
+  config.namespace :admin do |admin|
+    admin.download_links = [ :csv ]
+  end
 
   # == Pagination
   #

@@ -46,8 +46,8 @@ ActiveAdmin.register User do
     f.semantic_errors
     f.inputs do
       f.input :email
-      f.input :password, hint: (f.object.persisted? ? "Leave blank to keep the current password" : nil)
-      f.input :password_confirmation
+      f.input :password, required: f.object.new_record?, hint: (f.object.persisted? ? "Leave blank to keep the current password" : nil)
+      f.input :password_confirmation, required: f.object.new_record?
       f.input :role, as: :select, collection: User::ROLES, include_blank: false
     end
     f.actions
@@ -65,17 +65,24 @@ ActiveAdmin.register User do
     private
 
     def changing_own_role?
-      resource == current_user && params[:user][:role].present? && params[:user][:role] != resource.role
+      role = submitted_user[:role]
+      resource == current_user && role.present? && role != resource.role
+    end
+
+    def submitted_user
+      params.fetch(:user, {})
     end
 
     def remove_blank_passwords
+      return unless params.key?(:user)
+
       %i[password password_confirmation].each do |key|
         params[:user].delete(key) if params[:user][key].blank?
       end
     end
 
     def keep_signed_in_after_password_change
-      bypass_sign_in(resource) if resource == current_user && resource.errors.empty? && params[:user][:password].present?
+      bypass_sign_in(resource) if resource == current_user && resource.errors.empty? && submitted_user[:password].present?
     end
   end
 end

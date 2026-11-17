@@ -1,6 +1,6 @@
 namespace :active_admin do
   tailwind_command = -> {
-    [ Tailwindcss::Ruby.executable, "-i", "app/assets/stylesheets/active_admin.css", "-o", "app/assets/builds/active_admin.css" ]
+    [ Tailwindcss::Ruby.executable, "-i", "app/assets/tailwind/active_admin.css", "-o", "app/assets/builds/active_admin.css" ]
   }
 
   desc "Build the ActiveAdmin stylesheet with the Tailwind standalone binary"
