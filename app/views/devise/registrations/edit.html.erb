@@ -1,0 +1,42 @@
+<div class="mx-auto md:w-2/3 w-full">
+  <h1 class="font-bold text-4xl">Account settings</h1>
+
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "contents" }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <div class="my-5">
+      <%= f.label :email, class: "text-sm text-gray-700" %>
+      <%= f.email_field :email, required: true, autofocus: true, autocomplete: "email", class: "block w-full mt-2 border border-gray-300 rounded px-3 py-2" %>
+    </div>
+
+    <div class="my-5">
+      <%= f.label :password, "New password", class: "text-sm text-gray-700" %>
+      <%= f.password_field :password, autocomplete: "new-password", placeholder: "Leave blank to keep your current password", maxlength: 128, class: "block w-full mt-2 border border-gray-300 rounded px-3 py-2" %>
+      <% if @minimum_password_length %>
+        <p class="mt-1 text-sm text-gray-500"><%= @minimum_password_length %> characters minimum</p>
+      <% end %>
+    </div>
+
+    <div class="my-5">
+      <%= f.label :password_confirmation, "Confirm new password", class: "text-sm text-gray-700" %>
+      <%= f.password_field :password_confirmation, autocomplete: "new-password", maxlength: 128, class: "block w-full mt-2 border border-gray-300 rounded px-3 py-2" %>
+    </div>
+
+    <div class="my-5">
+      <%= f.label :current_password, class: "text-sm text-gray-700" %>
+      <%= f.password_field :current_password, required: true, autocomplete: "current-password", placeholder: "Needed to confirm your changes", maxlength: 128, class: "block w-full mt-2 border border-gray-300 rounded px-3 py-2" %>
+    </div>
+
+    <%= f.submit "Update", class: "px-4 py-2 bg-gray-800 text-white rounded cursor-pointer" %>
+  <% end %>
+
+  <% unless resource.admin? %>
+    <div class="mt-10 pt-6 border-t border-gray-200">
+      <h2 class="font-bold text-xl">Cancel my account</h2>
+      <p class="mt-2 text-sm text-gray-500">This deletes your account and cannot be undone.</p>
+      <%= button_to "Cancel my account", registration_path(resource_name), method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }, class: "mt-3 px-4 py-2 border border-gray-300 text-gray-700 rounded cursor-pointer hover:bg-gray-50" %>
+    </div>
+  <% end %>
+
+  <p class="mt-4 text-sm text-gray-500"><%= link_to "Back", :back, class: "text-gray-700 underline hover:no-underline" %></p>
+</div>
