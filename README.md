@@ -1,6 +1,6 @@
 # Bookstore
 
-A Rails 8 bookstore app. Signed-in users browse and search a book catalog. Admins manage books, categories, markets (stores that stock books), and users through an ActiveAdmin panel and a JSON API.
+A Rails 8 bookstore app. Anyone can browse and search the book catalog without signing in. Admins manage books, categories, markets (stores that stock books), and users through an ActiveAdmin panel and a JSON API.
 
 ## Features
 
@@ -66,6 +66,15 @@ This starts the Rails server, the Tailwind watcher (`css`), and the ActiveAdmin 
 
 Choose your own values in `.env` (copy `.env.example`). Passwords need at least 6 characters. If a variable is missing, `bin/rails db:seed` fails with a `KeyError`. Seeding is idempotent: an existing account keeps its current password, and only its role is re-applied.
 
+> **Existing dev databases:** if your database was seeded before this branch, its accounts keep the passwords they were seeded with, because the seeds never overwrite an existing password. Setting new values in `.env` does not change them. Reset those accounts' passwords (for example, as an admin in `/admin`), or start from a fresh database with `bin/rails db:reset`, which drops and reseeds your **development** database.
+
+### Other environment variables
+
+| Variable | Required | Used for |
+| --- | --- | --- |
+| `MAILER_SENDER` | No (defaults to `no-reply@bookstore.local`) | The From address on Devise emails, such as password reset |
+| `DATABASE_URL` | No | Database connection, see Setup |
+
 ## Usage
 
 ### Web
@@ -74,13 +83,14 @@ Choose your own values in `.env` (copy `.env.example`). Passwords need at least 
 | --- | --- | --- |
 | `/users/sign_in` | Everyone | Sign in |
 | `/users/sign_up` | Everyone | Create a `user` account |
-| `/books` | Signed-in users | Browse, search, and filter books |
+| `/books` | Everyone (no sign-in needed) | Browse, search, and filter books |
+| `/users/edit` | Signed-in users | Change email or password. Regular users can also cancel their account. Admins cannot. |
 | `/admin` | Admins | ActiveAdmin panel for books, categories, markets, and users |
 | `/up` | Everyone | Health check (200 when the app boots) |
 
 ### JSON API
 
-All endpoints live under `/api/v1` and use the same session cookie (`_bookstore_session`) as the web app, so sign in through the Devise form (`POST /users/sign_in`) first. Sign-in is rate limited to 10 attempts per 3 minutes per IP.
+All endpoints live under `/api/v1` and use the same session cookie (`_bookstore_session`) as the web app, so sign in through the Devise form (`POST /users/sign_in`) first. Sign-in, sign-up and password reset requests are each rate limited to 10 attempts per 3 minutes per IP.
 
 | Resource | Read (`GET`) | Write (`POST` / `PATCH` / `DELETE`) |
 | --- | --- | --- |
@@ -153,7 +163,7 @@ Read [CODING_STANDARDS.md](CODING_STANDARDS.md) before you open a pull request.
 app/
   controllers/
     api/v1/       # JSON API
-    users/        # Devise controllers (sessions, passwords)
+    users/        # Devise controllers (sessions, passwords, registrations)
     concerns/
   admin/          # ActiveAdmin resources (admin role only)
   models/         # Book, Category, Market, MarketBook, User, Role
@@ -168,6 +178,8 @@ test/             # Minitest suite
 ## Deployment
 
 The app ships with a `Dockerfile` and a Kamal config (`config/deploy.yml`). Production needs `RAILS_MASTER_KEY` to decrypt `config/credentials.yml.enc`. Pass it through Kamal secrets (`.kamal/secrets`) or your environment, and never commit it.
+
+Password reset emails do not work in production until mail delivery is configured. `config/environments/production.rb` still needs `config.action_mailer.default_url_options` set to your real host and an SMTP (or other delivery) setup, with its credentials kept in Rails credentials or environment variables, not in the repo.
 
 ```bash
 bin/kamal setup    # first deploy
