@@ -48,4 +48,27 @@ class Api::V1::CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal [], response.parsed_body
   end
+
+  test "unknown category is 404" do
+    sign_in users(:regular)
+    get api_v1_category_path(id: 999_999), as: :json
+    assert_response :not_found
+    assert_equal "Category not found", response.parsed_body["error"]
+  end
+
+  test "blank name on update gives 422" do
+    sign_in users(:admin)
+    patch api_v1_category_path(categories(:fiction)), params: { category: { name: "" } }, as: :json
+    assert_response :unprocessable_entity
+    assert_includes response.parsed_body["errors"], "Name can't be blank"
+    assert_equal "Fiction", categories(:fiction).reload.name
+  end
+
+  test "update or delete unknown id is 404" do
+    sign_in users(:admin)
+    patch api_v1_category_path(id: 999_999), params: { category: { name: "X" } }, as: :json
+    assert_response :not_found
+    delete api_v1_category_path(id: 999_999), as: :json
+    assert_response :not_found
+  end
 end

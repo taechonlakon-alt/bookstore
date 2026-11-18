@@ -73,4 +73,23 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal "boss@example.com", users(:admin).reload.email
   end
+
+  test "unknown user is 404" do
+    sign_in users(:admin)
+    get api_v1_user_path(id: 999_999), as: :json
+    assert_response :not_found
+    assert_equal "User not found", response.parsed_body["error"]
+    patch api_v1_user_path(id: 999_999), params: { user: { email: "x@example.com" } }, as: :json
+    assert_response :not_found
+    delete api_v1_user_path(id: 999_999), as: :json
+    assert_response :not_found
+  end
+
+  test "invalid email on update gives 422" do
+    sign_in users(:admin)
+    patch api_v1_user_path(users(:regular)), params: { user: { email: "not-an-email" } }, as: :json
+    assert_response :unprocessable_entity
+    assert_includes response.parsed_body["errors"], "Email is invalid"
+    assert_equal "regular@example.com", users(:regular).reload.email
+  end
 end

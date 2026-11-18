@@ -129,6 +129,37 @@ class ActiveAdminResourcesTest < ActionDispatch::IntegrationTest
     assert_match(/books/i, flash[:alert])
   end
 
+  test "batch delete removes empty categories" do
+    sign_in users(:admin)
+    empty = Category.create!(name: "Empty")
+    assert_difference("Category.count", -1) do
+      post batch_action_admin_categories_path, params: { batch_action: "destroy", collection_selection: [ empty.id ] }
+    end
+    assert_redirected_to admin_categories_path
+    assert_match(/deleted/i, flash[:notice])
+  end
+
+  test "batch delete of categories with books deletes nothing" do
+    sign_in users(:admin)
+    assert_no_difference("Category.count") do
+      post batch_action_admin_categories_path, params: { batch_action: "destroy", collection_selection: [ categories(:fiction).id ] }
+    end
+    assert_redirected_to admin_categories_path
+    assert_match(/books/i, flash[:alert])
+    assert_no_match(/\ADeleted/, flash[:alert])
+  end
+
+  test "batch delete of categories reports a partial success" do
+    sign_in users(:admin)
+    empty = Category.create!(name: "Empty")
+    assert_difference("Category.count", -1) do
+      post batch_action_admin_categories_path, params: { batch_action: "destroy", collection_selection: [ empty.id, categories(:fiction).id ] }
+    end
+    assert_redirected_to admin_categories_path
+    assert_match(/\ADeleted 1 category\. .*books/i, flash[:alert])
+    assert Category.exists?(categories(:fiction).id)
+  end
+
   test "ransack does not expose password fields" do
     assert_not_includes User.ransackable_attributes, "encrypted_password"
     assert_not_includes User.ransackable_attributes, "reset_password_token"

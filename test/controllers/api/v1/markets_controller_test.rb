@@ -36,4 +36,32 @@ class Api::V1::MarketsControllerTest < ActionDispatch::IntegrationTest
     get api_v1_market_path(id: 999_999), as: :json
     assert_equal "Market not found", response.parsed_body["error"]
   end
+
+  test "show includes books" do
+    sign_in users(:regular)
+    get api_v1_market_path(markets(:central)), as: :json
+    assert_response :ok
+    assert_equal "Central", response.parsed_body["name"]
+    assert_equal %w[Cosmos Dune], response.parsed_body["books"].map { _1["title"] }.sort
+  end
+
+  test "blank or duplicate name gives 422" do
+    sign_in users(:admin)
+    assert_no_difference("Market.count") { post api_v1_markets_path, params: { market: { name: "" } }, as: :json }
+    assert_response :unprocessable_entity
+    assert_includes response.parsed_body["errors"], "Name can't be blank"
+
+    other = Market.create!(name: "Other")
+    patch api_v1_market_path(other), params: { market: { name: "Central" } }, as: :json
+    assert_response :unprocessable_entity
+    assert_includes response.parsed_body["errors"], "Name has already been taken"
+  end
+
+  test "update or delete unknown id is 404" do
+    sign_in users(:admin)
+    patch api_v1_market_path(id: 999_999), params: { market: { name: "X" } }, as: :json
+    assert_response :not_found
+    delete api_v1_market_path(id: 999_999), as: :json
+    assert_response :not_found
+  end
 end
